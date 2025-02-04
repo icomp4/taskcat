@@ -2,6 +2,9 @@
 
 Modern task manager built in Rust + Tauri.
 
+# Screenshots
+![image](https://github.com/user-attachments/assets/f0bbbbaa-5e6a-4f52-a325-b136197adf0b)
+
 ## Features
 - Hierarchical process monitoring
 - Real-time CPU/Memory stats
@@ -19,7 +22,7 @@ Modern task manager built in Rust + Tauri.
 bun install
 
 # Dev mode
-bun tauri dev
+bun run tauri dev
 
 # Build
 bun tauri build
