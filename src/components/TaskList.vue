@@ -167,9 +167,9 @@ onUnmounted(() => {
 }
 
 .tabs button.active {
-  background: #398E4A;
+  background: #B31A57;
   color: #fff;
-  box-shadow: 0 1px 3px rgba(57, 142, 74, 0.3);
+  box-shadow: 0 1px 3px rgba(179, 26, 87, 0.3);
 }
 
 .table-container {
@@ -187,7 +187,7 @@ table {
 }
 
 th {
-  color: #398E4A;
+  color: #B31A57;
   font-weight: 600;
   padding: 1rem;
   border-bottom: 1px solid #27272a;
@@ -196,7 +196,7 @@ th {
 }
 
 th:hover {
-  color: #4aba63;
+  color: #d33172;
 }
 
 td {
@@ -209,8 +209,8 @@ tr {
 }
 
 tr.expanded {
-  background: #2d3a2f;
-  border-bottom: 1px solid #398E4A;
+  background: #b31a5769;
+  border-bottom: 1px solid #B31A57;
 }
 
 tr:hover:not(.expanded) {
@@ -218,7 +218,7 @@ tr:hover:not(.expanded) {
 }
 
 .child-process:hover {
-  background: rgba(57, 142, 74, 0.1);
+  background: #641233;
 }
 
 .kill-btn {
@@ -253,10 +253,10 @@ tr:hover .kill-btn {
 }
 
 .child-process {
-  background: rgba(57, 142, 74, 0.05);
+  background: rgba(179, 26, 87, 0.05);
 }
 
 .child-process:hover {
-  background: rgba(57, 142, 74, 0.1);
+  background: rgba(179, 26, 87, 0.1);
 }
 </style>
