@@ -19,7 +19,7 @@ Modern task manager built in Rust + Tauri.
 bun install
 
 # Dev mode
-bun tauri dev
+bun run tauri dev
 
 # Build
 bun tauri build
