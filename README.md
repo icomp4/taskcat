@@ -13,7 +13,7 @@ Modern task manager built in Rust + Tauri.
 - Vue.js frontend
 - Sysinfo core
 
-## Dev
+## Development
 ```bash
 # Install
 bun install
