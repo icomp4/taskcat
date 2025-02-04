@@ -1,7 +1,34 @@
-# Tauri + Vue 3
+# TaskCat
 
-This template should help get you started developing with Tauri + Vue 3 in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+Modern task manager built in Rust + Tauri.
 
-## Recommended IDE Setup
+## Features
+- Hierarchical process monitoring
+- Real-time CPU/Memory stats
+- Process control
+- Dark theme UI
 
-- [VS Code](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
+## Stack
+- Rust/Tauri backend
+- Vue.js frontend
+- Sysinfo core
+
+## Dev
+```bash
+# Install
+bun install
+
+# Dev mode
+bun tauri dev
+
+# Build
+bun tauri build
+```
+## Status
+Early development. Expect bugs and missing features.
+
+## Roadmap
+- Network usage monitoring
+- Disk I/O stats
+- Startup management
+- Performance optimizations
