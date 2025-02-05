@@ -7,6 +7,7 @@ const currentTab = ref('processes')
 const tabs = ['processes', 'usage', 'startup']
 const processData = ref([])
 const expandedGroups = ref([])
+const totalUsage = ref([])
 
 const isAnyExpanded = computed(() => expandedGroups.value.length > 0)
 
@@ -56,6 +57,7 @@ const startRefreshInterval = () => {
  if (!isAnyExpanded.value) {
    refreshInterval.value = setInterval(refreshProcesses, 1000)
  }
+ refreshInterval.value = setInterval(getTotalUsage, 1000)
 }
 
 const killProcess = async (pid) => {
@@ -67,8 +69,17 @@ const killProcess = async (pid) => {
  }
 }
 
+const getTotalUsage = async () => {
+ try {
+   totalUsage.value = await invoke('get_total_usage')
+ } catch (err) {
+   console.error('Failed to get total usage', err)
+ }
+}
+
 onMounted(async () => {
  await refreshProcesses()
+ await getTotalUsage()
  startRefreshInterval()
 })
 
@@ -91,8 +102,8 @@ onUnmounted(() => {
           <thead>
             <tr>
               <th>Name</th>
-              <th @click="sortConfig = {key: 'cpu_usage', desc: !sortConfig.desc}">CPU</th>
-              <th @click="sortConfig = {key: 'memory_usage', desc: !sortConfig.desc}">Memory</th>
+              <th @click="sortConfig = {key: 'cpu_usage', desc: !sortConfig.desc}">CPU <span style="color: wheat;">{{totalUsage.cpu }}%</span></th>
+              <th @click="sortConfig = {key: 'memory_usage', desc: !sortConfig.desc}">Memory <span style="color: wheat;">{{ formatMemory(totalUsage.memory) }}</span></th>
               <th>Disk</th>
               <th>Network</th>
               <th>PID</th>

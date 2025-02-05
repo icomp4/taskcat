@@ -1,4 +1,4 @@
-use sysinfo::{System, Pid, Process};
+use sysinfo::{System, Pid, Process, CpuRefreshKind, RefreshKind};
 use serde::Serialize;
 use std::collections::HashMap;
 
@@ -19,6 +19,12 @@ struct ProcessGroup {
     children: Vec<ProcessItem>,
     total_cpu: f32,
     total_memory: f64
+}
+
+#[derive(Serialize)]
+struct TotalUsage {
+    cpu: f32,
+    memory: u64
 }
 
 #[tauri::command]
@@ -75,6 +81,24 @@ async fn kill_process(pid: u32) -> Result<(), String> {
     Ok(())
 }
 
+#[tauri::command]
+fn get_total_usage() -> TotalUsage {
+    let mut s = System::new_with_specifics(
+        RefreshKind::nothing().with_cpu(CpuRefreshKind::everything()),
+    );
+    std::thread::sleep(sysinfo::MINIMUM_CPU_UPDATE_INTERVAL);
+    s.refresh_cpu_usage();
+
+    let cpu = s.global_cpu_usage();
+    let mut sys = System::new_all();
+    sys.refresh_all();
+
+    TotalUsage{
+        cpu: cpu.round(),
+        memory: sys.used_memory() / 1000000
+    }
+}
+
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -82,7 +106,8 @@ pub fn run() {
     .plugin(tauri_plugin_opener::init())
     .invoke_handler(tauri::generate_handler![
         get_processes,
-        kill_process
+        kill_process,
+        get_total_usage
     ])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");
