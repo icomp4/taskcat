@@ -3,7 +3,7 @@
 Modern task manager built in Rust + Tauri.
 
 # Screenshots
-![image](https://github.com/user-attachments/assets/c31dc590-f34d-4e76-b940-123b3b2a3667)
+![image](https://github.com/user-attachments/assets/f5187701-f344-42bd-be19-5384b8ea4d9c)
 
 ## Features
 - Hierarchical process monitoring
