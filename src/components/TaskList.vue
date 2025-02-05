@@ -12,8 +12,8 @@ const totalUsage = ref([])
 const isAnyExpanded = computed(() => expandedGroups.value.length > 0)
 
 const sortConfig = ref({
- key: 'cpu_usage',
- desc: true
+  key: 'cpu_usage',
+  desc: true
 })
 
 const formatMemory = (mbValue) => {
@@ -24,67 +24,69 @@ const formatMemory = (mbValue) => {
 }
 
 const sortedProcesses = computed(() =>
- [...processData.value].sort((a, b) => {
-   const modifier = sortConfig.value.desc ? -1 : 1
-   const aVal = sortConfig.value.key === 'cpu_usage' ? a.total_cpu : a.total_memory
-   const bVal = sortConfig.value.key === 'cpu_usage' ? b.total_cpu : b.total_memory
-   return modifier * (aVal - bVal)
- })
+  [...processData.value].sort((a, b) => {
+    const modifier = sortConfig.value.desc ? -1 : 1
+    const aVal = sortConfig.value.key === 'cpu_usage' ? a.total_cpu : a.total_memory
+    const bVal = sortConfig.value.key === 'cpu_usage' ? b.total_cpu : b.total_memory
+    return modifier * (aVal - bVal)
+  })
 )
 
+const refreshAll = async () => {
+  await Promise.all([refreshProcesses(), getTotalUsage()])
+}
+
 const toggleGroup = (groupId) => {
- const idx = expandedGroups.value.indexOf(groupId)
- if (idx === -1) {
-   expandedGroups.value.push(groupId)
-   clearInterval(refreshInterval.value)
- } else {
-   expandedGroups.value.splice(idx, 1)
-   if (!isAnyExpanded.value) {
-     startRefreshInterval()
-   }
- }
+  const idx = expandedGroups.value.indexOf(groupId)
+  if (idx === -1) {
+    expandedGroups.value.push(groupId)
+    clearInterval(refreshInterval.value)
+  } else {
+    expandedGroups.value.splice(idx, 1)
+    if (!isAnyExpanded.value) {
+      startRefreshInterval()
+    }
+  }
 }
 
 const refreshProcesses = async () => {
- try {
-   processData.value = await invoke('get_processes')
- } catch (err) {
-   console.error('Failed to refresh:', err)
- }
+  try {
+    processData.value = await invoke('get_processes')
+  } catch (err) {
+    console.error('Failed to refresh:', err)
+  }
 }
 
 const startRefreshInterval = () => {
- if (!isAnyExpanded.value) {
-   refreshInterval.value = setInterval(refreshProcesses, 1000)
- }
- refreshInterval.value = setInterval(getTotalUsage, 1000)
+  if (!isAnyExpanded.value) {
+    refreshInterval.value = setInterval(refreshAll, 1000)
+  }
 }
 
 const killProcess = async (pid) => {
- try {
-   await invoke('kill_process', { pid })
-   await refreshProcesses()
- } catch (err) {
-   console.error('Failed to kill process:', err)
- }
+  try {
+    await invoke('kill_process', { pid })
+    await refreshProcesses()
+  } catch (err) {
+    console.error('Failed to kill process:', err)
+  }
 }
 
 const getTotalUsage = async () => {
- try {
-   totalUsage.value = await invoke('get_total_usage')
- } catch (err) {
-   console.error('Failed to get total usage', err)
- }
+  try {
+    totalUsage.value = await invoke('get_total_usage')
+  } catch (err) {
+    console.error('Failed to get total usage', err)
+  }
 }
 
 onMounted(async () => {
- await refreshProcesses()
- await getTotalUsage()
- startRefreshInterval()
+  await refreshAll()
+  startRefreshInterval()
 })
 
 onUnmounted(() => {
- clearInterval(refreshInterval.value)
+  clearInterval(refreshInterval.value)
 })
 </script>
 
@@ -213,6 +215,11 @@ th:hover {
 td {
   padding: 1rem;
   border-bottom: 1px solid #27272a;
+  border-bottom: 1px solid #27272a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
 }
 
 tr {
