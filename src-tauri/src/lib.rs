@@ -1,6 +1,8 @@
 use sysinfo::{System, Pid, Process, CpuRefreshKind, RefreshKind};
 use serde::Serialize;
 use std::collections::HashMap;
+use rust_decimal::Decimal;
+use rust_decimal::prelude::*;
 
 #[derive(Serialize)]
 struct ProcessItem {
@@ -29,42 +31,82 @@ struct TotalUsage {
 
 #[tauri::command]
 fn get_processes() -> Vec<ProcessGroup> {
-    let mut s = System::new_all();
-    s.refresh_all();
+   let mut s = System::new_with_specifics(
+       RefreshKind::nothing().with_cpu(CpuRefreshKind::everything()),
+   );
+   std::thread::sleep(sysinfo::MINIMUM_CPU_UPDATE_INTERVAL);
+   s.refresh_cpu_usage();
+   s.refresh_all();
 
-    let mut groups: HashMap<Option<Pid>, Vec<(Pid, &Process)>> = HashMap::new();
-    for (pid, process) in s.processes() {
-        groups.entry(process.parent())
-            .or_default()
-            .push((*pid, process));
-    }
+   let total_cpu_time = s.cpus().iter().map(|cpu| cpu.cpu_usage()).sum::<f32>();
 
-    groups.into_iter()
-        .filter_map(|(parent_pid, processes)| {
-            if let Some(parent) = parent_pid.and_then(|ppid| s.process(ppid)) {
-                let children: Vec<ProcessItem> = processes.iter()
-                    .map(|(pid, proc)| ProcessItem {
-                        id: pid.as_u32(),
-                        name: proc.name().to_string_lossy().into_owned(),
-                        cpu_usage: proc.cpu_usage(),
-                        memory_usage: (proc.memory() as f64 / 1000000.0).round()
-                    })
-                    .collect();
+   let mut groups: HashMap<Option<Pid>, Vec<(Pid, &Process)>> = HashMap::new();
+   for (pid, process) in s.processes() {
+       groups.entry(process.parent())
+           .or_default()
+           .push((*pid, process));
+   }
 
-                Some(ProcessGroup {
-                    id: parent_pid?.as_u32(),
-                    name: parent.name().to_string_lossy().into_owned(),
-                    cpu_usage: parent.cpu_usage(),
-                    memory_usage: (parent.memory() as f64 / 1000000.0).round(),
-                    total_cpu: children.iter().map(|p| p.cpu_usage).sum(),
-                    total_memory: children.iter().map(|p| p.memory_usage).sum(),
-                    children
-                })
-            } else {
-                None
-            }
-        })
-        .collect()
+   groups.into_iter()
+       .filter_map(|(parent_pid, processes)| {
+           if let Some(parent) = parent_pid.and_then(|ppid| s.process(ppid)) {
+               let children: Vec<ProcessItem> = processes.iter()
+                   .map(|(pid, proc)| ProcessItem {
+                       id: pid.as_u32(),
+                       name: proc.name().to_string_lossy().into_owned(),
+                       cpu_usage: if total_cpu_time > 0.0 {
+                           Decimal::from_f32(proc.cpu_usage() / total_cpu_time * 100.0)
+                               .unwrap_or_default()
+                               .round_dp(2)
+                               .to_f32()
+                               .unwrap_or(0.0)
+                       } else {
+                           0.0
+                       },
+                       memory_usage: Decimal::from_f64(proc.memory() as f64 / 1000000.0)
+                           .unwrap_or_default()
+                           .round_dp(2)
+                           .to_f64()
+                           .unwrap_or(0.0)
+                   })
+                   .collect();
+
+               let parent_cpu = if total_cpu_time > 0.0 {
+                   Decimal::from_f32(parent.cpu_usage() / total_cpu_time * 100.0)
+                       .unwrap_or_default()
+                       .round_dp(2)
+                       .to_f32()
+                       .unwrap_or(0.0)
+               } else {
+                   0.0
+               };
+
+               Some(ProcessGroup {
+                   id: parent_pid?.as_u32(),
+                   name: parent.name().to_string_lossy().into_owned(),
+                   cpu_usage: parent_cpu,
+                   memory_usage: Decimal::from_f64(parent.memory() as f64 / 1000000.0)
+                       .unwrap_or_default()
+                       .round_dp(2)
+                       .to_f64()
+                       .unwrap_or(0.0),
+                   total_cpu: Decimal::from_f32(children.iter().map(|p| p.cpu_usage).sum())
+                       .unwrap_or_default()
+                       .round_dp(2)
+                       .to_f32()
+                       .unwrap_or(0.0),
+                   total_memory: Decimal::from_f64(children.iter().map(|p| p.memory_usage).sum())
+                       .unwrap_or_default()
+                       .round_dp(2)
+                       .to_f64()
+                       .unwrap_or(0.0),
+                   children
+               })
+           } else {
+               None
+           }
+       })
+       .collect()
 }
 
 #[tauri::command]
@@ -93,8 +135,14 @@ fn get_total_usage() -> TotalUsage {
     let mut sys = System::new_all();
     sys.refresh_all();
 
+    let total_cpu = Decimal::from_f32(cpu)
+        .unwrap_or_default()
+        .round_dp(2)
+        .to_f32()
+        .unwrap_or(0.0);
+
     TotalUsage{
-        cpu: cpu.round(),
+        cpu: total_cpu,
         memory: sys.used_memory() / 1000000
     }
 }
